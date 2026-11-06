@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$staged" ] && exit 0
+
+partial=$(echo "$staged" | tr '\n' '\0' | xargs -0 git diff --name-only --)
+if [ -n "$partial" ]; then
+  echo "pre-commit: these files have both staged and unstaged changes:"
+  echo "$partial" | sed 's/^/  /'
+  echo "Stage or stash the remaining changes, then commit again."
+  exit 1
+fi
+
+echo "$staged" | tr '\n' '\0' | xargs -0 bunx prettier --write --ignore-unknown --log-level warn
+echo "$staged" | tr '\n' '\0' | xargs -0 git add
+bun run --silent lint

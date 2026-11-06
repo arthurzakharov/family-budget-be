@@ -1,0 +1,22 @@
+# Local Postgres for development: `bun run db:up` / `bun run db:down`.
+# Data survives restarts in the `db-data` volume; `docker compose down -v` wipes it.
+services:
+  db:
+    image: postgres:18-alpine
+    container_name: familly-budget-be-data-base
+    environment:
+      POSTGRES_USER: familly_budget
+      POSTGRES_PASSWORD: familly_budget
+      POSTGRES_DB: familly_budget
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U familly_budget -d familly_budget"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  db-data:

@@ -1,0 +1,40 @@
+# Log in first (auth.http). Replace the ids with ones from the responses.
+@groupId = 00000000-0000-0000-0000-000000000000
+@userId = 00000000-0000-0000-0000-000000000000
+
+### Groups
+GET {{host}}/groups
+
+### Create a group (admin)
+POST {{host}}/groups
+Origin: {{origin}}
+Content-Type: application/json
+
+{ "name": "Family" }
+
+### Members: names and roles, for every user
+GET {{host}}/members
+
+### Users (admin)
+GET {{host}}/users
+
+### Create a user (admin)
+POST {{host}}/users
+Origin: {{origin}}
+Content-Type: application/json
+
+{ "name": "Vera", "role": "contributor", "password": "secret1", "groupIds": ["{{groupId}}"] }
+
+### Change role and groups (admin)
+PUT {{host}}/users/{{userId}}
+Origin: {{origin}}
+Content-Type: application/json
+
+{ "role": "viewer", "groupIds": ["{{groupId}}"] }
+
+### Add to a group (admin)
+POST {{host}}/groups/{{groupId}}/members
+Origin: {{origin}}
+Content-Type: application/json
+
+{ "userId": "{{userId}}" }

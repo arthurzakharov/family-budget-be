@@ -1,0 +1,25 @@
+### Health check
+GET {{host}}/health
+
+### Root is not a route: JSON 404
+GET {{host}}/
+
+### Reuses the given request id (echoed in the X-Request-Id response header)
+GET {{host}}/health
+X-Request-Id: manual-test-1
+
+### Unknown route: JSON 404 with request id
+GET {{host}}/does-not-exist
+
+### CORS: allowed origin gets Access-Control-Allow-Origin
+GET {{host}}/health
+Origin: {{origin}}
+
+### CORS preflight
+OPTIONS {{host}}/health
+Origin: {{origin}}
+Access-Control-Request-Method: GET
+
+### CORS: unknown origin gets no Access-Control-Allow-Origin
+GET {{host}}/health
+Origin: https://evil.example.com

@@ -1,0 +1,12 @@
+node_modules
+coverage
+.env
+.env.*
+.DS_Store
+dist-client
+.idea
+.vscode/
+dist-server
+
+# One-time import with real data (this repo is public); delete after use
+requests/import-deposits.http

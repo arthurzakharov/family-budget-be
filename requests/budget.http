@@ -1,0 +1,51 @@
+# Log in first (auth.http). Money is in euro cents.
+@groupId = 00000000-0000-0000-0000-000000000000
+
+### Deposit transactions
+GET {{host}}/deposit/transactions
+
+### Add a deposit (admins also send "userId")
+POST {{host}}/deposit/transactions
+Origin: {{origin}}
+Content-Type: application/json
+
+{ "groupId": "{{groupId}}", "type": "deposit", "date": "2026-01-01", "amountCents": 100000 }
+
+### Deposit rates
+GET {{host}}/deposit/rates
+
+### Add a rate period
+POST {{host}}/deposit/rates
+Origin: {{origin}}
+Content-Type: application/json
+
+{ "ratePercent": 2.25, "from": null, "till": null }
+
+### Interest (only your groups' share unless you are the admin)
+GET {{host}}/deposit/interest
+
+### Coins the workspace trades
+GET {{host}}/crypto/coins
+
+### Crypto transactions
+GET {{host}}/crypto/transactions
+
+### Buy coins
+POST {{host}}/crypto/transactions
+Origin: {{origin}}
+Content-Type: application/json
+
+{ "groupId": "{{groupId}}", "coin": "BTC", "type": "buy", "date": "2026-01-01", "amount": 0.001, "price": 91234.56 }
+
+### Expense categories
+GET {{host}}/expenses/categories
+
+### Expense entries
+GET {{host}}/expenses/entries
+
+### Add an expense
+POST {{host}}/expenses/entries
+Origin: {{origin}}
+Content-Type: application/json
+
+{ "groupId": "{{groupId}}", "categoryId": "groceries", "date": "2026-01-01", "amountCents": 4250, "note": "Weekly shop" }

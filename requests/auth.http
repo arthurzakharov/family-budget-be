@@ -1,0 +1,41 @@
+# Both WebStorm and VSCode REST Client keep the session cookie between requests,
+# so run "Sign up" (or the two login steps) first.
+
+### Sign up: creates a workspace and its admin, and logs the admin in
+POST {{host}}/auth/signup
+Origin: {{origin}}
+Content-Type: application/json
+
+{ "email": "family@example.com", "password": "secret1", "name": "Admin", "userPassword": "secret1" }
+
+### Status: none, workspace (pick a user) or user
+GET {{host}}/auth/status
+
+### Login step 1: unlock the workspace
+POST {{host}}/auth/login
+Origin: {{origin}}
+Content-Type: application/json
+
+{ "email": "family@example.com", "password": "secret1" }
+
+### Login step 2: pick a user (id from step 1)
+POST {{host}}/auth/user-login
+Origin: {{origin}}
+Content-Type: application/json
+
+{ "userId": "00000000-0000-0000-0000-000000000000", "password": "secret1" }
+
+### Change own password
+POST {{host}}/auth/password
+Origin: {{origin}}
+Content-Type: application/json
+
+{ "current": "secret1", "next": "secret2" }
+
+### Back to picking a user
+POST {{host}}/auth/switch-user
+Origin: {{origin}}
+
+### Logout
+POST {{host}}/auth/logout
+Origin: {{origin}}

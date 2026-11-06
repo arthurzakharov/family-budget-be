@@ -1,0 +1,16 @@
+node_modules
+coverage
+tests
+.git
+.env
+.env.*
+*.md
+Dockerfile
+.dockerignore
+dist-client
+scripts
+tsconfig.client.json
+.github
+.vscode
+dist-server
+requests
