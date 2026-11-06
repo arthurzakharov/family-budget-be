@@ -13,7 +13,7 @@ describe("createFamilyBudgetClient", () => {
       commitInfo: commitInfoFixture,
       origin: [],
     });
-    const client = createFamilyBudgetClient("http://familly-budget-be.test", {
+    const client = createFamilyBudgetClient("http://family-budget-be.test", {
       fetch: (input: string | URL | Request, init?: RequestInit) =>
         app.request(input, init),
     });

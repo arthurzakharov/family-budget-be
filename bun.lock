@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "familly-budget-be",
+      "name": "family-budget-be",
       "dependencies": {
         "@hono/zod-validator": "^0.9.1",
         "drizzle-orm": "^0.45.4",

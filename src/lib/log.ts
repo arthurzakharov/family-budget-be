@@ -19,7 +19,7 @@ export function buildLogOptions({
 }: LogParams): pino.LoggerOptions {
   return {
     level,
-    base: { service: "familly-budget-be" },
+    base: { service: "family-budget-be" },
     timestamp: pino.stdTimeFunctions.isoTime,
     ...(pretty && {
       transport: { target: "pino-pretty", options: { colorize: true } },

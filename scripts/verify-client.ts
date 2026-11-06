@@ -5,14 +5,14 @@ import { join } from "node:path";
 
 const root = join(import.meta.dir, "..");
 const consumer = await mkdtemp(
-  join(tmpdir(), "familly-budget-be-client-consumer-"),
+  join(tmpdir(), "family-budget-be-client-consumer-"),
 );
 const tsc5 = join(root, "node_modules/typescript5/bin/tsc");
 
 const consumerSource = `
-import { createFamilyBudgetClient, type AuthStatus, type HealthResponse, type FamilyBudgetClient, type InterestSummary } from "@arthurzakharov/familly-budget-be-client";
+import { createFamilyBudgetClient, type AuthStatus, type HealthResponse, type FamilyBudgetClient, type InterestSummary } from "@arthurzakharov/family-budget-be-client";
 
-const api: FamilyBudgetClient = createFamilyBudgetClient("https://familly-budget-be.example.com");
+const api: FamilyBudgetClient = createFamilyBudgetClient("https://family-budget-be.example.com");
 const res = await api.health.$get();
 const body: HealthResponse = await res.json();
 const hash: string | undefined = body.commit?.shortHash;
@@ -34,7 +34,7 @@ api.doesNotExist.$get();
 try {
   const pkgDir = join(
     consumer,
-    "node_modules/@arthurzakharov/familly-budget-be-client",
+    "node_modules/@arthurzakharov/family-budget-be-client",
   );
   await mkdir(join(consumer, "node_modules/@arthurzakharov"), {
     recursive: true,

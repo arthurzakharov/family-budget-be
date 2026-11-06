@@ -68,9 +68,9 @@ for await (const dir of new Glob("**/").scan({
 }
 
 const clientPkg = {
-  name: "@arthurzakharov/familly-budget-be-client",
+  name: "@arthurzakharov/family-budget-be-client",
   version,
-  description: "Typed API client for familly-budget-be",
+  description: "Typed API client for family-budget-be",
   type: "module",
   main: "./client.js",
   types: "./client.d.ts",
@@ -81,7 +81,7 @@ const clientPkg = {
   peerDependencies: { hono: rootPkg.dependencies.hono },
   repository: {
     type: "git",
-    url: "git+https://github.com/arthurzakharov/familly-budget-be.git",
+    url: "git+https://github.com/arthurzakharov/family-budget-be.git",
   },
   publishConfig: { registry: "https://npm.pkg.github.com" },
 };

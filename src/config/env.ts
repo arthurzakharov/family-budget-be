@@ -8,7 +8,7 @@ type RawEnv = Record<string, string | undefined>;
 
 /** Local Postgres from `docker-compose.yml`; used when `DATABASE_URL` is unset outside production. */
 const LOCAL_DATABASE_URL =
-  "postgres://familly_budget:familly_budget@localhost:5432/familly_budget";
+  "postgres://family_budget:family_budget@localhost:5432/family_budget";
 
 /**
  * Schema defining and validating the application environment variables structure.

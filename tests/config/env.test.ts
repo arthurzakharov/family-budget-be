@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { parseEnv } from "@/config/env";
 
 const LOCAL_DATABASE_URL =
-  "postgres://familly_budget:familly_budget@localhost:5432/familly_budget";
+  "postgres://family_budget:family_budget@localhost:5432/family_budget";
 const PROD_DATABASE_URL = "postgres://user:pass@db.example.com:5432/budget";
 
 describe("parseEnv", () => {

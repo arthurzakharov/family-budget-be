@@ -3,17 +3,17 @@
 services:
   db:
     image: postgres:18-alpine
-    container_name: familly-budget-be-data-base
+    container_name: family-budget-be-data-base
     environment:
-      POSTGRES_USER: familly_budget
-      POSTGRES_PASSWORD: familly_budget
-      POSTGRES_DB: familly_budget
+      POSTGRES_USER: family_budget
+      POSTGRES_PASSWORD: family_budget
+      POSTGRES_DB: family_budget
     ports:
       - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U familly_budget -d familly_budget"]
+      test: ["CMD-SHELL", "pg_isready -U family_budget -d family_budget"]
       interval: 2s
       timeout: 3s
       retries: 15

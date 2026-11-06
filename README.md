@@ -1,4 +1,4 @@
-# familly-budget-be
+# family-budget-be
 
 Backend for the family budget app: an API for tracking a household's income, expenses and budgets. Built with [Bun](https://bun.sh) + [Hono](https://hono.dev).
 
@@ -67,7 +67,7 @@ Postgres, accessed with [Drizzle ORM](https://orm.drizzle.team) through Bun's bu
 - **Starting over:** the app is still in a test phase and every database (local and deployed) can be thrown away. Instead of piling up migrations, you may delete `drizzle/`, run `bun run db:generate` to get one fresh `0000` migration, and recreate the databases: `bun run db:reset` locally, a new Render Postgres when deployed. A database that ran the old migrations fails to start with the new ones, so it must be recreated.
 - **Applying migrations:** the server runs pending migrations on startup, before it accepts requests (`src/db/client.ts`). Applied ones are recorded in the `drizzle.__drizzle_migrations` table, so each runs once.
 - **Tests** run the same migrations on an in-memory Postgres ([PGlite](https://pglite.dev), `tests/helpers/db.ts`), so they need neither Docker nor a database in CI.
-- **Browsing data locally:** connect any SQL client (e.g. the IDE's Database panel) to `localhost:5432`, database, user and password `familly_budget`.
+- **Browsing data locally:** connect any SQL client (e.g. the IDE's Database panel) to `localhost:5432`, database, user and password `family_budget`.
 
 ## Endpoints
 
@@ -126,7 +126,7 @@ If none of these succeed, `commit` is `null` and a warning is logged at startup.
 | Environment | `host`                                                | `origin`                |
 | ----------- | ----------------------------------------------------- | ----------------------- |
 | `local`     | `http://localhost:3000` (start it with `bun run dev`) | `http://localhost:5173` |
-| `deployed`  | `https://familly-budget-be.onrender.com`              | `http://localhost:5173` |
+| `deployed`  | `https://family-budget-be.onrender.com`               | `http://localhost:5173` |
 
 **WebStorm** has the HTTP Client built in, no plugin needed. It reads the environments from `requests/http-client.env.json`.
 
@@ -139,7 +139,7 @@ If none of these succeed, `commit` is `null` and a warning is logged at startup.
 ```json
 "rest-client.environmentVariables": {
   "local": { "host": "http://localhost:3000", "origin": "http://localhost:5173" },
-  "deployed": { "host": "https://familly-budget-be.onrender.com", "origin": "http://localhost:5173" }
+  "deployed": { "host": "https://family-budget-be.onrender.com", "origin": "http://localhost:5173" }
 }
 ```
 
@@ -152,8 +152,8 @@ If none of these succeed, `commit` is `null` and a warning is logged at startup.
 ## Docker
 
 ```sh
-bun run docker:build   # build image `familly-budget-be-image` with current commit info
-bun run docker:run     # start container `familly-budget-be-container` on port 3000 (replaces a running one)
+bun run docker:build   # build image `family-budget-be-image` with current commit info
+bun run docker:run     # start container `family-budget-be-container` on port 3000 (replaces a running one)
 bun run docker:logs    # follow logs
 bun run docker:stop    # stop (container is removed automatically)
 ```
@@ -165,14 +165,14 @@ The image contains only the bundled `server.js` and its source map (no `src/` or
 The `image` job in `.github/workflows/ci.yml` runs on every push to `main`, and when CI is started manually on `main` (Actions → CI → Run workflow), after all checks pass:
 
 1. builds the Docker image with the four `GIT_COMMIT_*` build args;
-2. pushes it to `ghcr.io/arthurzakharov/familly-budget-be-container`, tagged with the commit hash and `latest`;
+2. pushes it to `ghcr.io/arthurzakharov/family-budget-be-container`, tagged with the commit hash and `latest`;
 3. calls the `DEPLOY_HOOK_URL` repository secret with `imgURL` set to that exact image, so the platform deploys the image CI built and tested.
 
 The platform only pulls the image and sets the runtime env vars (`ALLOWED_ORIGINS`, `DATABASE_URL`); it does not build anything. Without the `DEPLOY_HOOK_URL` secret, the job still pushes the image and skips the deploy.
 
 ## Typed client for frontends
 
-Published to GitHub Packages as `@arthurzakharov/familly-budget-be-client` (types + a tiny `hono/client` wrapper, no server code).
+Published to GitHub Packages as `@arthurzakharov/family-budget-be-client` (types + a tiny `hono/client` wrapper, no server code).
 
 ### Using it in a frontend
 
@@ -187,13 +187,13 @@ Published to GitHub Packages as `@arthurzakharov/familly-budget-be-client` (type
 3. Install (with `GITHUB_TOKEN` exported in your shell / CI):
 
    ```sh
-   bun add @arthurzakharov/familly-budget-be-client hono
+   bun add @arthurzakharov/family-budget-be-client hono
    ```
 
 4. Use it:
 
    ```ts
-   import { createFamilyBudgetClient } from "@arthurzakharov/familly-budget-be-client";
+   import { createFamilyBudgetClient } from "@arthurzakharov/family-budget-be-client";
 
    const api = createFamilyBudgetClient(
      import.meta.env.VITE_FAMILLY_BUDGET_BE_URL,
@@ -202,7 +202,7 @@ Published to GitHub Packages as `@arthurzakharov/familly-budget-be-client` (type
    const body = await res.json(); // { status: "ok"; commit: PublicCommitInfo | null }
    ```
 
-The frontend origin must be listed in familly-budget-be's `ALLOWED_ORIGINS` env var (comma-separated), otherwise browsers block the requests (CORS).
+The frontend origin must be listed in family-budget-be's `ALLOWED_ORIGINS` env var (comma-separated), otherwise browsers block the requests (CORS).
 
 ### Publishing a new version
 
@@ -211,7 +211,7 @@ bun run client:publish 0.4.0
 ```
 
 This tags the current commit as `v0.4.0` and pushes the tag. It refuses to run unless you are on `main`, in sync with `origin/main`, with a clean working tree, and the version is greater than the latest tag.
-The `Publish client` workflow then runs all checks, builds `dist-client/` and publishes `@arthurzakharov/familly-budget-be-client@0.4.0`.
+The `Publish client` workflow then runs all checks, builds `dist-client/` and publishes `@arthurzakharov/family-budget-be-client@0.4.0`.
 Use `bun run client:verify` locally to build the package and type-check it the way a frontend would.
 
 ## Code style
