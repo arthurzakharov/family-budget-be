@@ -8,6 +8,13 @@
       "when": 1793980620005,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794068524030,
+      "tag": "0001_coin_prices",
+      "breakpoints": true
     }
   ]
 }

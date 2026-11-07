@@ -52,6 +52,7 @@ All configuration comes from env vars. Server settings are validated on startup 
 | `GIT_COMMIT_DATE`    | none                      | Docker build arg (CI)     | Commit date (ISO 8601)                                                                                          |
 | `ALLOWED_ORIGINS`    | `[]` (no origins allowed) | Deployment                | Comma-separated frontend origins allowed to call the API (CORS)                                                 |
 | `DATABASE_URL`       | local Docker Postgres     | Deployment                | Postgres connection URL (`postgres://user:password@host:5432/db`)                                               |
+| `COINGECKO_API_KEY`  | none (public API)         | Deployment (optional)     | CoinGecko Demo API key for crypto prices; without it the keyless public API is used, with lower rate limits     |
 
 - **Dockerfile:** sets `NODE_ENV`, `PORT` and `LOG_LEVEL` in the image. A deployment env var with the same name overrides them.
 - **Docker build args:** CI passes the four `GIT_COMMIT_*` values when it builds the image (`bun run docker:build` does the same locally). They are baked into the image.

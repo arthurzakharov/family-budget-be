@@ -14,6 +14,7 @@ import {
   date,
   index,
   integer,
+  jsonb,
   numeric,
   pgEnum,
   pgTable,
@@ -55,6 +56,10 @@ export const workspaces = pgTable("workspaces", {
   passwordHash: text().notNull(),
   /** Coins the workspace trades; `null` until the admin picks, meaning the defaults. */
   enabledCoins: text().array(),
+  /** Last fetched price of each coin in euros, keyed by symbol; `null` until first fetched. */
+  coinPrices: jsonb().$type<Record<string, number>>(),
+  /** When `coinPrices` were fetched. */
+  coinPricesFetchedAt: timestamp({ withTimezone: true }),
   /** Category ids (built-in or custom) that cannot be picked for new entries. */
   hiddenCategories: text()
     .array()

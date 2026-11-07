@@ -157,6 +157,14 @@ export type CoinSymbol =
   | "SHIB"
   | "DOT";
 
+/** The workspace's last fetched coin prices. */
+export type CoinPrices = {
+  /** Price of one coin in euros, for the coins that have one. */
+  prices: Partial<Record<CoinSymbol, number>>;
+  /** When they were fetched (ISO 8601); `null` if never. */
+  fetchedAt: string | null;
+};
+
 export type CryptoTransactionType = "buy" | "sell";
 
 /** A buy or sell of a coin. */

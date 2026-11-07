@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { csrf } from "hono/csrf";
 import { secureHeaders } from "hono/secure-headers";
+import { createCoinGecko, type PriceSource } from "@/api/coingecko";
 import type { Db } from "@/db/client";
 import { today as localToday } from "@/lib/dates";
 import type { CookieOptions } from "@/lib/session-cookie";
@@ -33,6 +34,10 @@ type CreateAppParams = {
   cookie: CookieOptions;
   /** Today as `YYYY-MM-DD`; defaults to the server's local date. */
   today?: (() => string) | undefined;
+  /** Current coin prices; defaults to CoinGecko's public API without a key. */
+  prices?: PriceSource | undefined;
+  /** The current time; defaults to the clock. */
+  now?: (() => Date) | undefined;
 };
 
 /** Builds the Hono app: middleware, error handling and routes. */
@@ -43,6 +48,8 @@ export function createApp({
   db,
   cookie,
   today = localToday,
+  prices = createCoinGecko(),
+  now = () => new Date(),
 }: CreateAppParams) {
   const app = new Hono<AppEnv>();
 
@@ -70,7 +77,7 @@ export function createApp({
     .route("/", createUserRoutes(db))
     .route("/", createGroupRoutes(db))
     .route("/", createDepositRoutes({ db, today }))
-    .route("/", createCryptoRoutes(db))
+    .route("/", createCryptoRoutes({ db, prices, now }))
     .route("/", createExpenseRoutes(db));
 }
 

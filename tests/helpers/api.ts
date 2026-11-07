@@ -1,3 +1,4 @@
+import type { CoinPriceMap, PriceSource } from "@/api/coingecko";
 import { createApp } from "@/app";
 import type { Db } from "@/db/client";
 import type { AuthStatus, Group, PublicUser } from "@/types/responses";
@@ -8,16 +9,50 @@ export const TODAY = "2026-03-15";
 /** The frontend's origin; allowed by `createTestApp` and sent by `Browser`. */
 export const ORIGIN = "http://localhost:5173";
 
+/**
+ * A price source answering with `prices` (for the asked coins only) and
+ * recording each call's coins, instead of calling CoinGecko.
+ */
+export function fakePrices(prices: CoinPriceMap = {}) {
+  const calls: string[][] = [];
+  const source: PriceSource = {
+    async eurPrices(coins) {
+      calls.push([...coins]);
+      return Object.fromEntries(
+        coins.flatMap((coin) =>
+          prices[coin] === undefined ? [] : [[coin, prices[coin]]],
+        ),
+      );
+    },
+  };
+  return { source, calls };
+}
+
+/** A clock the test moves forward by hand. */
+export function fakeClock(start = "2026-03-15T12:00:00.000Z") {
+  let time = new Date(start).getTime();
+  return {
+    now: () => new Date(time),
+    advance: (ms: number) => {
+      time += ms;
+    },
+  };
+}
+
 type CreateTestAppParams = {
   db: Db;
   origin?: string[];
   secure?: boolean;
+  prices?: PriceSource;
+  now?: () => Date;
 };
 
 export function createTestApp({
   db,
   origin = [ORIGIN],
   secure = false,
+  prices = fakePrices().source,
+  now,
 }: CreateTestAppParams) {
   const { log } = createTestLog();
   return createApp({
@@ -27,6 +62,8 @@ export function createTestApp({
     db,
     cookie: { secure },
     today: () => TODAY,
+    prices,
+    now,
   });
 }
 
@@ -96,8 +133,11 @@ export const PASSWORD = "secret1";
  * A workspace with two groups and four users, each logged in in their own browser:
  * admin; contributor in g1; viewer in g1; other (contributor) in g2.
  */
-export async function setupWorkspace(db: Db) {
-  const app = createTestApp({ db });
+export async function setupWorkspace(
+  db: Db,
+  options: Omit<CreateTestAppParams, "db"> = {},
+) {
+  const app = createTestApp({ db, ...options });
   const email = `${crypto.randomUUID()}@example.com`;
   const admin = new Browser(app);
   const signup = await admin.json<AuthStatus & { stage: "user" }>(

@@ -1,3 +1,4 @@
+import { createCoinGecko } from "@/api/coingecko";
 import { createApp } from "@/app";
 import { parseEnv } from "@/config/env";
 import { createDb, runMigrations } from "@/db/client";
@@ -31,6 +32,8 @@ const app = createApp({
   origin: env.ALLOWED_ORIGINS,
   db,
   cookie: { secure: env.NODE_ENV === "production" },
+  // Crypto prices; the optional Demo API key raises CoinGecko's rate limits.
+  prices: createCoinGecko({ apiKey: env.COINGECKO_API_KEY }),
 });
 
 // Start Bun server on env.PORT

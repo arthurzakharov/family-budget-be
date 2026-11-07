@@ -22,6 +22,8 @@ const envSchema = z
     LOG_FORMAT: CustomSchemas.logFormat,
     ALLOWED_ORIGINS: CustomSchemas.urlOrigins,
     DATABASE_URL: CustomSchemas.optionalDatabaseUrl,
+    /** Optional CoinGecko Demo API key for crypto prices (higher rate limits). */
+    COINGECKO_API_KEY: CustomSchemas.optionalString,
     GIT_COMMIT_HASH: CustomSchemas.optionalString,
     GIT_COMMIT_MESSAGE: CustomSchemas.optionalString,
     GIT_COMMIT_AUTHOR: CustomSchemas.optionalString,

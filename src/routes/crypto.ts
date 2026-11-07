@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
+import type { PriceSource } from "@/api/coingecko";
 import type { Db } from "@/db/client";
 import { cryptoTransactions, workspaces } from "@/db/schema";
 import { ApiError } from "@/errors";
@@ -12,7 +13,11 @@ import type { CurrentUser } from "@/lib/sessions";
 import { requireUser } from "@/middleware/auth";
 import { validate } from "@/middleware/validate";
 import type { AppEnv } from "@/types/app-env";
-import type { CoinSymbol, CryptoTransaction } from "@/types/responses";
+import type {
+  CoinPrices,
+  CoinSymbol,
+  CryptoTransaction,
+} from "@/types/responses";
 
 const coin = z.enum(COINS, { error: "errors.coin" });
 
@@ -43,6 +48,21 @@ const columns = {
 
 const NOT_FOUND = "errors.transactionNotFound";
 
+/**
+ * Prices fetched less than this long ago are returned as they are instead of
+ * asking CoinGecko again, so repeated clicks (or several family members at
+ * once) stay within its rate limits.
+ */
+export const PRICES_FRESH_MS = 60_000;
+
+type CryptoRoutesParams = {
+  db: Db;
+  /** Where current coin prices come from (CoinGecko in production). */
+  prices: PriceSource;
+  /** The current time; injectable for tests. */
+  now: () => Date;
+};
+
 /** Rows hold any text in `coin`; the API only ever writes `CoinSymbol`s. */
 const toTransaction = (
   row: { coin: string } & Omit<CryptoTransaction, "coin">,
@@ -51,9 +71,31 @@ const toTransaction = (
 /**
  * Crypto buys and sells. Everyone reads the coins the workspace trades, only
  * the admin changes them. Reading transactions is for everyone, changes need
- * a non-viewer; both only within the user's groups.
+ * a non-viewer; both only within the user's groups. Current prices are fetched
+ * only on request (anyone may ask) and kept on the workspace, so everyone
+ * sees the same prices without further calls to the price API.
  */
-export function createCryptoRoutes(db: Db) {
+export function createCryptoRoutes({ db, prices, now }: CryptoRoutesParams) {
+  async function storedPrices(workspaceId: string) {
+    const [workspace] = await db
+      .select({
+        enabledCoins: workspaces.enabledCoins,
+        coinPrices: workspaces.coinPrices,
+        coinPricesFetchedAt: workspaces.coinPricesFetchedAt,
+      })
+      .from(workspaces)
+      .where(eq(workspaces.id, workspaceId));
+    return workspace!;
+  }
+
+  const toCoinPrices = (
+    coinPrices: Record<string, number> | null,
+    fetchedAt: Date | null,
+  ): CoinPrices => ({
+    prices: coinPrices ?? {},
+    fetchedAt: fetchedAt?.toISOString() ?? null,
+  });
+
   async function coinsOf(workspaceId: string): Promise<CoinSymbol[]> {
     const [workspace] = await db
       .select({ enabledCoins: workspaces.enabledCoins })
@@ -107,6 +149,37 @@ export function createCryptoRoutes(db: Db) {
         return c.json<CoinSymbol[]>(enabled);
       },
     )
+    .get("/crypto/prices", reader, async (c) => {
+      const stored = await storedPrices(c.var.user.workspaceId);
+      return c.json<CoinPrices>(
+        toCoinPrices(stored.coinPrices, stored.coinPricesFetchedAt),
+      );
+    })
+    .post("/crypto/prices", reader, async (c) => {
+      const workspaceId = c.var.user.workspaceId;
+      const stored = await storedPrices(workspaceId);
+      const coins = enabledCoins(stored.enabledCoins);
+      const fetchedAt = stored.coinPricesFetchedAt;
+      // Recently fetched and covering every traded coin: nothing to ask for.
+      const fresh =
+        fetchedAt !== null &&
+        now().getTime() - fetchedAt.getTime() < PRICES_FRESH_MS &&
+        coins.every((coin) => stored.coinPrices?.[coin] !== undefined);
+      if (fresh) {
+        return c.json<CoinPrices>(toCoinPrices(stored.coinPrices, fetchedAt));
+      }
+      // Coins turned off keep their last price, so old holdings still have one.
+      const merged = {
+        ...stored.coinPrices,
+        ...(await prices.eurPrices(coins)),
+      };
+      const at = now();
+      await db
+        .update(workspaces)
+        .set({ coinPrices: merged, coinPricesFetchedAt: at })
+        .where(eq(workspaces.id, workspaceId));
+      return c.json<CoinPrices>(toCoinPrices(merged, at));
+    })
     .get("/crypto/transactions", reader, async (c) =>
       c.json<CryptoTransaction[]>(
         (
