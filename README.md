@@ -82,6 +82,8 @@ Postgres, accessed with [Drizzle ORM](https://orm.drizzle.team) through Bun's bu
 | `POST /auth/login`, `POST /auth/user-login`             | anyone            | Log in in two steps: unlock the workspace, then pick a user                            |
 | `POST /auth/switch-user`, `POST /auth/logout`           | anyone            | Back to picking a user / end the session                                               |
 | `POST /auth/password`                                   | user              | Change own password                                                                    |
+| `GET /auth/workspace`                                   | user              | The workspace's login email                                                            |
+| `PUT /auth/workspace/email`, `POST …/password`          | admin             | Change the workspace's login email / password (needs the current workspace password)   |
 | `GET /members`, `GET /groups`                           | user              | Names and roles of the workspace's users; its groups                                   |
 | `GET/POST /users`, `PUT/DELETE /users/:id`              | admin             | Users, their roles and groups                                                          |
 | `PUT /users/:id/password`                               | admin             | Set a user's password                                                                  |

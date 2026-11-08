@@ -267,6 +267,90 @@ describe("auth", () => {
     expect(status.stage).toBe("user");
   });
 
+  test("every user sees the workspace email", async () => {
+    const ws = await setupWorkspace(db);
+
+    expect(await ws.viewer.json("GET", "/auth/workspace")).toEqual({
+      email: ws.email,
+    });
+  });
+
+  test("only the admin changes the workspace email", async () => {
+    const ws = await setupWorkspace(db);
+    const other = await setupWorkspace(db);
+    const email = newEmail();
+
+    const forbidden = await ws.viewer.request("PUT", "/auth/workspace/email", {
+      password: PASSWORD,
+      email,
+    });
+    expect(forbidden.status).toBe(403);
+
+    const wrong = await ws.admin.request("PUT", "/auth/workspace/email", {
+      password: "wrong-password",
+      email,
+    });
+    expect(wrong.status).toBe(400);
+    expect(await wrong.json()).toMatchObject({ code: "errors.wrongPassword" });
+
+    const taken = await ws.admin.request("PUT", "/auth/workspace/email", {
+      password: PASSWORD,
+      email: other.email,
+    });
+    expect(taken.status).toBe(409);
+    expect(await taken.json()).toMatchObject({ code: "errors.emailTaken" });
+
+    expect(
+      await ws.admin.json("PUT", "/auth/workspace/email", {
+        password: PASSWORD,
+        email,
+      }),
+    ).toEqual({ email: email.toLowerCase() });
+
+    const browser = new Browser(ws.app);
+    const status = await browser.json<AuthStatus>("POST", "/auth/login", {
+      email,
+      password: PASSWORD,
+    });
+    expect(status.stage).toBe("workspace");
+  });
+
+  test("only the admin changes the workspace password", async () => {
+    const ws = await setupWorkspace(db);
+
+    const forbidden = await ws.viewer.request(
+      "POST",
+      "/auth/workspace/password",
+      { current: PASSWORD, next: "new-secret" },
+    );
+    expect(forbidden.status).toBe(403);
+
+    const wrong = await ws.admin.request("POST", "/auth/workspace/password", {
+      current: "wrong-password",
+      next: "new-secret",
+    });
+    expect(wrong.status).toBe(400);
+    expect(await wrong.json()).toMatchObject({ code: "errors.wrongPassword" });
+
+    const changed = await ws.admin.request("POST", "/auth/workspace/password", {
+      current: PASSWORD,
+      next: "new-secret",
+    });
+    expect(changed.status).toBe(204);
+
+    const browser = new Browser(ws.app);
+    const old = await browser.request("POST", "/auth/login", {
+      email: ws.email,
+      password: PASSWORD,
+    });
+    expect(old.status).toBe(401);
+    const status = await browser.json<AuthStatus>("POST", "/auth/login", {
+      email: ws.email,
+      password: "new-secret",
+    });
+    expect(status.stage).toBe("workspace");
+  });
+
   test("protected routes need a logged-in user", async () => {
     const ws = await setupWorkspace(db);
 

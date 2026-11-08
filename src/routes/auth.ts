@@ -23,7 +23,7 @@ import {
   type Session,
 } from "@/lib/sessions";
 import type { AppEnv } from "@/types/app-env";
-import type { AuthStatus } from "@/types/responses";
+import type { AuthStatus, Workspace } from "@/types/responses";
 
 const signupSchema = z.object({
   /** Unlocks the workspace (step 1 of logging in). */
@@ -51,6 +51,12 @@ const passwordSchema = z.object({
   next: Schemas.password,
 });
 
+const workspaceEmailSchema = z.object({
+  /** The current workspace password, confirming the change. */
+  password: z.string({ error: "errors.wrongPassword" }),
+  email: Schemas.email,
+});
+
 /**
  * Logging in happens in two steps: unlock the workspace (`/auth/login`), then
  * pick a user and enter their password (`/auth/user-login`). The session lives
@@ -66,6 +72,20 @@ export function createAuthRoutes(db: Db, cookie: CookieOptions) {
       stage: "workspace",
       users: all.map(({ id, name }) => ({ id, name })),
     };
+  }
+
+  /** The workspace with this id; throws if the current workspace password is not `password`. */
+  async function verifyWorkspacePassword(id: string, password: string) {
+    const [workspace] = await db
+      .select({ passwordHash: workspaces.passwordHash })
+      .from(workspaces)
+      .where(eq(workspaces.id, id));
+    if (
+      !workspace ||
+      !(await Bun.password.verify(password, workspace.passwordHash))
+    ) {
+      throw new ApiError(400, "errors.wrongPassword");
+    }
   }
 
   async function requireSession(c: Context): Promise<Session> {
@@ -193,6 +213,54 @@ export function createAuthRoutes(db: Db, cookie: CookieOptions) {
             .update(users)
             .set({ passwordHash: await Bun.password.hash(next) })
             .where(eq(users.id, user.id));
+          return c.body(null, 204);
+        },
+      )
+      // The workspace's login email, for every user.
+      .get("/auth/workspace", requireUser(db), async (c) => {
+        const [workspace] = await db
+          .select({ email: workspaces.email })
+          .from(workspaces)
+          .where(eq(workspaces.id, c.var.user.workspaceId));
+        if (!workspace) throw new ApiError(401, "errors.unauthorized");
+        return c.json<Workspace>(workspace);
+      })
+      // The admin changes the workspace's login email.
+      .put(
+        "/auth/workspace/email",
+        requireUser(db, { admin: true }),
+        validate("json", workspaceEmailSchema),
+        async (c) => {
+          const { password, email } = c.req.valid("json");
+          const { workspaceId } = c.var.user;
+          await verifyWorkspacePassword(workspaceId, password);
+          const [taken] = await db
+            .select({ id: workspaces.id })
+            .from(workspaces)
+            .where(eq(workspaces.email, email));
+          if (taken && taken.id !== workspaceId) {
+            throw new ApiError(409, "errors.emailTaken");
+          }
+          await db
+            .update(workspaces)
+            .set({ email })
+            .where(eq(workspaces.id, workspaceId));
+          return c.json<Workspace>({ email });
+        },
+      )
+      // The admin changes the workspace's login password.
+      .post(
+        "/auth/workspace/password",
+        requireUser(db, { admin: true }),
+        validate("json", passwordSchema),
+        async (c) => {
+          const { current, next } = c.req.valid("json");
+          const { workspaceId } = c.var.user;
+          await verifyWorkspacePassword(workspaceId, current);
+          await db
+            .update(workspaces)
+            .set({ passwordHash: await Bun.password.hash(next) })
+            .where(eq(workspaces.id, workspaceId));
           return c.body(null, 204);
         },
       )

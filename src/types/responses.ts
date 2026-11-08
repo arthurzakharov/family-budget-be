@@ -45,6 +45,11 @@ export type PublicUser = {
 /** What every logged-in user may know about the others. */
 export type Member = Pick<PublicUser, "id" | "name" | "role">;
 
+/** The workspace the family logs in to (step 1 of logging in). */
+export type Workspace = {
+  email: string;
+};
+
 /** Logging in happens in two steps: unlock the workspace, then pick a user. */
 export type AuthStatus =
   /** Nobody is logged in. */

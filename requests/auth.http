@@ -32,6 +32,23 @@ Content-Type: application/json
 
 { "current": "secret1", "next": "secret2" }
 
+### The workspace's login email
+GET {{host}}/auth/workspace
+
+### Change the workspace email (admin)
+PUT {{host}}/auth/workspace/email
+Origin: {{origin}}
+Content-Type: application/json
+
+{ "password": "secret1", "email": "new@example.com" }
+
+### Change the workspace password (admin)
+POST {{host}}/auth/workspace/password
+Origin: {{origin}}
+Content-Type: application/json
+
+{ "current": "secret1", "next": "secret2" }
+
 ### Back to picking a user
 POST {{host}}/auth/switch-user
 Origin: {{origin}}
